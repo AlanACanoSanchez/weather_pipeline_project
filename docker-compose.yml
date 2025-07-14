@@ -2,6 +2,19 @@ version: '3.7'
 
 services:
 
+  # PostgreSQL para Airflow
+  postgres:
+    image: postgres:13
+    container_name: airflow-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_db:/var/lib/postgresql/data
+
+  # MinIO (simula S3)
   minio:
     image: minio/minio
     container_name: minio
@@ -15,30 +28,41 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9001"
 
+  # Airflow Webserver
   airflow-webserver:
     image: apache/airflow:2.7.0
     container_name: airflow-webserver
     restart: always
     depends_on:
       - airflow-scheduler
+      - postgres
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__CORE__SQL_ALCHEMY_CONN: sqlite:////usr/local/airflow/airflow.db
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./docker/airflow:/usr/local/airflow
     ports:
       - "8080:8080"
     command: webserver
 
+  # Airflow Scheduler
   airflow-scheduler:
     image: apache/airflow:2.7.0
     container_name: airflow-scheduler
     restart: always
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./docker/airflow:/usr/local/airflow
     command: scheduler
 
+  # Spark
   spark:
     image: bitnami/spark:latest
     container_name: spark
@@ -46,3 +70,6 @@ services:
       - "4040:4040"
     environment:
       - SPARK_MODE=master
+
+volumes:
+  postgres_db:

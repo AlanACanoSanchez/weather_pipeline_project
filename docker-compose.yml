@@ -41,9 +41,11 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
+      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123456
     volumes:
       - ./dags:/opt/airflow/dags
       - ./docker/airflow:/usr/local/airflow
+      - ./logs:/opt/airflow/logs
     ports:
       - "8080:8080"
     command: webserver
@@ -58,9 +60,11 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123456
     volumes:
       - ./dags:/opt/airflow/dags
       - ./docker/airflow:/usr/local/airflow
+      - ./logs:/opt/airflow/logs
     command: scheduler
 
   # Spark

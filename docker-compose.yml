@@ -42,10 +42,16 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123456
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
     volumes:
       - ./dags:/opt/airflow/dags
       - ./docker/airflow:/usr/local/airflow
       - ./logs:/opt/airflow/logs
+      - ./data_lake/raw:/opt/airflow/data_lake/raw
+      - ./data_lake/processed:/opt/airflow/data_lake/processed
+
     ports:
       - "8080:8080"
     command: webserver
@@ -61,10 +67,16 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123456
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
     volumes:
       - ./dags:/opt/airflow/dags
       - ./docker/airflow:/usr/local/airflow
       - ./logs:/opt/airflow/logs
+      - ./data_lake/raw:/opt/airflow/data_lake/raw
+      - ./data_lake/processed:/opt/airflow/data_lake/processed
+
     command: scheduler
 
   # Spark

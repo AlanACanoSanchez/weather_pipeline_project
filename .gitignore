@@ -14,6 +14,9 @@ logs/
 data_lake/
 *.meta
 
+data_lake/weather_raw/
+*.xml
+
 # --- Configuración de VSCode ---
 .vscode/
 

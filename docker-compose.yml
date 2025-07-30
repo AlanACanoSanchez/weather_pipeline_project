@@ -23,7 +23,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - ./data_lake:/data
+      - ./minio_data:/data  # antes usabas ./data_lake:/data
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin

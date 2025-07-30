@@ -21,7 +21,7 @@ default_args = {
 dag = DAG(
     dag_id='process_weather_data',
     default_args=default_args,
-    description='Procesa archivos JSON y genera un archivo Parquet con data del día actual',
+    description='Procesa archivos JSON y genera un archivo Parquet con data del día actual y KPIs',
     schedule_interval='@hourly',
     catchup=False
 )
@@ -78,6 +78,16 @@ def process_weather_file():
     # Seleccionar columnas relevantes
     df_final = df_today[['time', 'temperature_2m', 'hour', 'weekday']]
 
+    # --- Cálculo de KPIs ---
+    temp_min = df_final['temperature_2m'].min()
+    temp_max = df_final['temperature_2m'].max()
+    temp_mean = df_final['temperature_2m'].mean()
+
+    # Agregar columnas con los KPIs
+    df_final['temp_min'] = temp_min
+    df_final['temp_max'] = temp_max
+    df_final['temp_mean'] = temp_mean
+
     # Guardar archivo procesado en Parquet
     today_str = today.strftime('%Y%m%d')
     filename = f"weather_{today_str}.parquet"
@@ -95,10 +105,9 @@ def process_weather_file():
     os.remove(file_path)
     s3.delete_object(Bucket=RAW_BUCKET, Key=latest_file)
 
-    print(f"✅ Procesado correctamente (Parquet): {filename}")
+    print(f"✅ Procesado correctamente (Parquet con KPIs): {filename}")
 
 # ---- SENSOR ----
-# Espera a que termine la tarea 'fetch_and_store_weather' del DAG 'extract_weather_data'
 wait_for_extraction = ExternalTaskSensor(
     task_id="wait_for_extract",
     external_dag_id="extract_weather_data",

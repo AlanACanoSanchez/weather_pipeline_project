@@ -9,13 +9,11 @@ __pycache__/
 
 # --- Logs de Airflow ---
 logs/
+data_lake/raw/*
+data_lake/processed/*
 
 # --- Archivos de MinIO (simulación de S3) ---
-data_lake/
-*.meta
-
-data_lake/weather_raw/
-*.xml
+minio_data/
 
 # --- Configuración de VSCode ---
 .vscode/
@@ -33,3 +31,6 @@ Thumbs.db
 
 # --- Archivos que contienen IDs de DAGs corriendo ---
 dag_processor_manager/
+
+# Mantener las carpetas vacías en el repo
+!.gitkeep

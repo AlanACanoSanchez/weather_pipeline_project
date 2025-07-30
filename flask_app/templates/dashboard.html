@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex" style="height:100vh;">
+
+    <!-- Sidebar -->
+    <div class="bg-primary text-white p-4 d-flex flex-column justify-content-center" style="width: 280px;">
+        <h2 class="mb-4">CDMX</h2>
+        <div class="text-center mb-4">
+            <i class="fas fa-sun fa-4x mb-3"></i>
+            <h1>{{ current_temp }}°C</h1>
+            <p class="lead">Soleado</p>
+        </div>
+        <p class="small mt-auto text-center">Actualizado cada hora</p>
+    </div>
+
+    <!-- Main content -->
+    <div class="flex-grow-1 p-4 bg-light overflow-auto">
+        <h3 class="mb-4">Clima de hoy</h3>
+
+        <!-- Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5>Mínima</h5>
+                        <h3>{{ temp_min }}°C</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5>Promedio</h5>
+                        <h3>{{ temp_mean }}°C</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5>Máxima</h5>
+                        <h3>{{ temp_max }}°C</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <canvas id="tempChart" height="100"></canvas>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <h5 class="mb-3">Datos por hora</h5>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Hora</th>
+                    <th>Temperatura (°C)</th>
+                    <th>Mín</th>
+                    <th>Máx</th>
+                    <th>Promedio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in table %}
+                <tr>
+                    <td>{{ row.hour }}</td>
+                    <td>{{ row.temperature_2m }}</td>
+                    <td>{{ row.temp_min }}</td>
+                    <td>{{ row.temp_max }}</td>
+                    <td>{{ row.temp_mean }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    const ctx = document.getElementById('tempChart').getContext('2d');
+
+    const labels = {{ hours | tojson }};
+    const temps = {{ temps | tojson }};
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Temperatura (°C)',
+                data: temps,
+                borderColor: 'rgba(255, 165, 0, 1)',
+                backgroundColor: 'rgba(255, 165, 0, 0.2)',
+                tension: 0.3,
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

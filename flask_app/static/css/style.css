@@ -1,6 +1,84 @@
+/* Importar fuente moderna */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
 body {
-    font-family: 'Segoe UI', Tahoma, sans-serif;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #f0f2f5, #e4e6eb);
 }
-.card {
-    border: none;
+
+/* Tarjetas de métricas (fila superior) */
+.metric-card {
+    background: linear-gradient(
+        135deg,
+        rgba(213, 250, 251),
+        rgba(202, 230, 254)
+    );
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-radius: 22px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+
+    /* Tamaño uniforme */
+    min-height: 160px; /* altura fija para todas */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
+
+.metric-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
+}
+
+/* Tipografía dentro de métricas */
+.big-number {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0;
+}
+
+.metric-card h4 {
+    font-weight: 600;
+    font-size: 1.3rem;
+    color: #333;
+}
+
+.label-title {
+    font-size: 1.1rem;
+    color: #555;
+    font-weight: 500;
+}
+
+/* Forecast horizontal card */
+.forecast-card {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.9),
+        rgba(230, 240, 255, 0.7)
+    );
+    border-radius: 22px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+/* Estilo de cada hora */
+.hour-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.hour-temp {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #222;
+}
+
+.hour-icon i {
+    font-size: 2rem; /* Iconos grandes */
+    color: #f9a825; /* Amarillo para el sol */
+}
+

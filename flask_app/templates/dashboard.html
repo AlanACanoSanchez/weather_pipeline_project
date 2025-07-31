@@ -1,111 +1,141 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="d-flex" style="height:100vh;">
+<div class="container-fluid bg-light min-vh-100 py-5">
+  <div class="container" style="max-width: 1800px;">
 
-    <!-- Sidebar -->
-    <div class="bg-primary text-white p-4 d-flex flex-column justify-content-center" style="width: 280px;">
-        <h2 class="mb-4">CDMX</h2>
-        <div class="text-center mb-4">
-            <i class="fas fa-sun fa-4x mb-3"></i>
-            <h1>{{ current_temp }}°C</h1>
-            <p class="lead">Soleado</p>
+    <!-- Tarjetas principales -->
+    <div class="row g-4 mb-4">
+    <div class="col-12 col-md-3">
+        <div class="card metric-card main-card text-center">
+        <div class="card-body d-flex flex-column justify-content-center">
+            <h4 class="mb-3">CDMX</h4>
+            <h1 class="display-4 big-number">{{ current_temp }}°C</h1>
+            <p class="text-muted">{{ now().strftime('%d/%m/%Y') if false else "" }}</p>
         </div>
-        <p class="small mt-auto text-center">Actualizado cada hora</p>
+        </div>
     </div>
 
-    <!-- Main content -->
-    <div class="flex-grow-1 p-4 bg-light overflow-auto">
-        <h3 class="mb-4">Clima de hoy</h3>
-
-        <!-- Cards -->
-        <div class="row mb-4">
-            <div class="col-md-4 mb-3">
-                <div class="card text-center shadow-sm">
-                    <div class="card-body">
-                        <h5>Mínima</h5>
-                        <h3>{{ temp_min }}°C</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card text-center shadow-sm">
-                    <div class="card-body">
-                        <h5>Promedio</h5>
-                        <h3>{{ temp_mean }}°C</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card text-center shadow-sm">
-                    <div class="card-body">
-                        <h5>Máxima</h5>
-                        <h3>{{ temp_max }}°C</h3>
-                    </div>
-                </div>
-            </div>
+    <div class="col-12 col-md-3">
+        <div class="card metric-card text-center">
+        <div class="card-body d-flex flex-column justify-content-center">
+            <h6 class="label-title">Promedio</h6>
+            <h2 class="big-number">{{ temp_mean }}°C</h2>
         </div>
-
-        <!-- Chart -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-body">
-                <canvas id="tempChart" height="100"></canvas>
-            </div>
         </div>
-
-        <!-- Table -->
-        <h5 class="mb-3">Datos por hora</h5>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Hora</th>
-                    <th>Temperatura (°C)</th>
-                    <th>Mín</th>
-                    <th>Máx</th>
-                    <th>Promedio</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in table %}
-                <tr>
-                    <td>{{ row.hour }}</td>
-                    <td>{{ row.temperature_2m }}</td>
-                    <td>{{ row.temp_min }}</td>
-                    <td>{{ row.temp_max }}</td>
-                    <td>{{ row.temp_mean }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
     </div>
 
+    <div class="col-12 col-md-3">
+        <div class="card metric-card text-center">
+        <div class="card-body d-flex flex-column justify-content-center">
+            <h6 class="label-title">Mínima</h6>
+            <h2 class="big-number">{{ temp_min }}°C</h2>
+        </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <div class="card metric-card text-center">
+        <div class="card-body d-flex flex-column justify-content-center">
+            <h6 class="label-title">Máxima</h6>
+            <h2 class="big-number">{{ temp_max }}°C</h2>
+        </div>
+        </div>
+    </div>
+    </div>
+
+
+    <!-- Próximas horas -->
+<!-- Pronóstico por horas -->
+    <div class="card forecast-card shadow-sm p-3 mb-4">
+        <div class="d-flex flex-row overflow-auto">
+            {% set current_hour = namespace(done=false) %}
+            {% for row in forecast %}
+                {% if not current_hour.done %}
+                    {% set label = "Ahora" %}
+                    {% set current_hour.done = true %}
+                {% else %}
+                    {% set label = row.hour_label %}
+                {% endif %}
+                <div class="text-center px-4 flex-shrink-0">
+                    <div class="hour-label mb-2">{{ label }}</div>
+                    <div class="hour-icon mb-2">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div class="hour-temp">{{ row.temperature_2m }}°C</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+
+    <!-- Gráfica -->
+    <div class="card shadow-sm rounded-4">
+      <div class="card-body">
+        <canvas id="tempChart" height="100"></canvas>
+      </div>
+    </div>
+
+  </div>
+  <div id="chart-data" 
+     data-labels='{{ hours | tojson }}'
+     data-temps='{{ temps | tojson }}'></div>
 </div>
 
 <script>
-    const ctx = document.getElementById('tempChart').getContext('2d');
+  const ctx = document.getElementById('tempChart').getContext('2d');
+  const el = document.getElementById("chart-data");
+  const labels = JSON.parse(el.dataset.labels);
+  const temps = JSON.parse(el.dataset.temps);
+  const forecastStart = "{{ forecast[0].hour_label if forecast else '' }}";
+  let forecastIndex = labels.indexOf(forecastStart);
 
-    const labels = {{ hours | tojson }};
-    const temps = {{ temps | tojson }};
+  let realData = temps;
+  let forecastData = [];
+  if (forecastIndex !== -1 && forecastStart !== "") {
+    realData = temps.slice(0, forecastIndex);
+    forecastData = temps.slice(forecastIndex);
+  }
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Temperatura (°C)',
-                data: temps,
-                borderColor: 'rgba(255, 165, 0, 1)',
-                backgroundColor: 'rgba(255, 165, 0, 0.2)',
-                tension: 0.3,
-                fill: true,
-            }]
+  const gradientReal = ctx.createLinearGradient(0, 0, 0, 400);
+  gradientReal.addColorStop(0, 'rgba(255, 165, 0, 0.5)');
+  gradientReal.addColorStop(1, 'rgba(255, 165, 0, 0)');
+
+  const gradientForecast = ctx.createLinearGradient(0, 0, 0, 400);
+  gradientForecast.addColorStop(0, 'rgba(0, 123, 255, 0.4)');
+  gradientForecast.addColorStop(1, 'rgba(0, 123, 255, 0)');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Real',
+          data: realData.concat(new Array(forecastData.length).fill(null)),
+          borderColor: 'rgba(255, 165, 0, 1)',
+          backgroundColor: gradientReal,
+          tension: 0.3,
+          fill: true,
         },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
-            }
+        {
+          label: 'Predicción',
+          data: new Array(realData.length).fill(null).concat(forecastData),
+          borderColor: 'rgba(0, 123, 255, 1)',
+          backgroundColor: gradientForecast,
+          borderDash: [5,5],
+          tension: 0.3,
+          fill: true,
         }
-    });
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      interaction: { mode: 'nearest', axis: 'x', intersect: false }
+    }
+  });
 </script>
-
 {% endblock %}

@@ -46,39 +46,38 @@
 
     <!-- Próximas horas -->
 <!-- Pronóstico por horas -->
-    <div class="card forecast-card shadow-sm p-3 mb-4">
-        <div class="d-flex flex-row overflow-auto">
-            {% set current_hour = namespace(done=false) %}
-            {% for row in forecast %}
-                {% if not current_hour.done %}
-                    {% set label = "Ahora" %}
-                    {% set current_hour.done = true %}
-                {% else %}
-                    {% set label = row.hour_label %}
-                {% endif %}
-                <div class="text-center px-4 flex-shrink-0">
-                    <div class="hour-label mb-2">{{ label }}</div>
-                    <div class="hour-icon mb-2">
-                        <i class="fas fa-sun"></i>
-                    </div>
-                    <div class="hour-temp">{{ row.temperature_2m }}°C</div>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-
-
-    <!-- Gráfica -->
-    <div class="card shadow-sm rounded-4">
-      <div class="card-body">
-        <canvas id="tempChart" height="100"></canvas>
+<!-- Forecast Card Mejorada con Scroll -->
+  <div class="card shadow-sm mb-4 border-0 custom-forecast-card">
+    <div class="card-body px-4 py-3 overflow-auto forecast-scroll">
+      <div class="d-flex flex-nowrap justify-content-start align-items-center">
+        {% for row in forecast %}
+          <div class="text-center px-4 py-2 forecast-item flex-shrink-0">
+            <div class="forecast-hour fw-bold fs-4">
+              {{ 'Ahora' if loop.index0 == 0 else row.hour_label }}
+            </div>
+            <div style="font-size: 42px;">{{ row.icon }}</div>
+            <div class="forecast-temp fw-semibold fs-5 mt-2">{{ row.temperature_2m }}°C</div>
+          </div>
+        {% endfor %}
       </div>
     </div>
-
   </div>
-  <div id="chart-data" 
+
+
+
+
+<!-- Gráfica -->
+<div class="card shadow-sm border-0 mt-4">
+  <div class="card-body">
+    <div style="height: 450px;">
+      <canvas id="tempChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div id="chart-data" 
      data-labels='{{ hours | tojson }}'
-     data-temps='{{ temps | tojson }}'></div>
+     data-temps='{{ temps | tojson }}'>
 </div>
 
 <script>
@@ -86,56 +85,85 @@
   const el = document.getElementById("chart-data");
   const labels = JSON.parse(el.dataset.labels);
   const temps = JSON.parse(el.dataset.temps);
-  const forecastStart = "{{ forecast[0].hour_label if forecast else '' }}";
-  let forecastIndex = labels.indexOf(forecastStart);
-
-  let realData = temps;
-  let forecastData = [];
-  if (forecastIndex !== -1 && forecastStart !== "") {
-    realData = temps.slice(0, forecastIndex);
-    forecastData = temps.slice(forecastIndex);
-  }
-
-  const gradientReal = ctx.createLinearGradient(0, 0, 0, 400);
-  gradientReal.addColorStop(0, 'rgba(255, 165, 0, 0.5)');
-  gradientReal.addColorStop(1, 'rgba(255, 165, 0, 0)');
-
-  const gradientForecast = ctx.createLinearGradient(0, 0, 0, 400);
-  gradientForecast.addColorStop(0, 'rgba(0, 123, 255, 0.4)');
-  gradientForecast.addColorStop(1, 'rgba(0, 123, 255, 0)');
 
   new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels,
-      datasets: [
-        {
-          label: 'Real',
-          data: realData.concat(new Array(forecastData.length).fill(null)),
-          borderColor: 'rgba(255, 165, 0, 1)',
-          backgroundColor: gradientReal,
-          tension: 0.3,
-          fill: true,
-        },
-        {
-          label: 'Predicción',
-          data: new Array(realData.length).fill(null).concat(forecastData),
-          borderColor: 'rgba(0, 123, 255, 1)',
-          backgroundColor: gradientForecast,
-          borderDash: [5,5],
-          tension: 0.3,
-          fill: true,
-        }
-      ]
+      datasets: [{
+        label: null,
+        data: temps,
+        fill: false, // ❌ no hay fondo
+        borderColor: '#007bff', // ✔️ azul fuerte
+        backgroundColor: '#007bff',
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#007bff',
+        pointBorderWidth: 2,
+      }]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'top' },
-        tooltip: { mode: 'index', intersect: false }
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#333',
+          titleFont: { size: 14 },
+          bodyFont: { size: 13 },
+          padding: 10,
+          cornerRadius: 6,
+        }
       },
-      interaction: { mode: 'nearest', axis: 'x', intersect: false }
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Horas',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            color: '#444',
+            padding: { top: 20 }
+          },
+          grid: {
+            display: false
+          },
+          ticks: {
+            color: '#444',
+            font: { size: 14 }
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Temperatura (°C)',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            color: '#444',
+            padding: { bottom: 10 }
+          },
+          min: 8,
+          max: 26,
+          ticks: {
+            stepSize: 2,
+            color: '#444',
+            font: { size: 14 },
+            padding: 10
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)',
+            lineWidth: 1
+          }
+        }
+      }
     }
   });
 </script>
+
 {% endblock %}

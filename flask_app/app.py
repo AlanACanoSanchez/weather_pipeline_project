@@ -7,6 +7,19 @@ app = Flask(__name__)
 
 PROCESSED_PATH = Path(__file__).parent.parent / "data_lake" / "processed"
 
+def infer_weather_emoji(temp_celsius: float) -> str:
+    if temp_celsius <= 10:
+        return "☁️"  # frío/nublado
+    elif 11 <= temp_celsius <= 16:
+        return "🌤️"  # parcialmente nublado
+    elif 17 <= temp_celsius <= 23:
+        return "☀️"  # soleado
+    elif 24 <= temp_celsius <= 29:
+        return "🌞"  # calor
+    else:
+        return "🔥"  # calor extremo
+
+
 def load_data():
     parquet_files = sorted(PROCESSED_PATH.glob("weather_*.parquet"))
     if not parquet_files:
@@ -30,6 +43,7 @@ def dashboard():
 
     # Formatear horas
     df['hour_label'] = df['hour'].apply(format_hour)
+    df['icon'] = df['temperature_2m'].apply(infer_weather_emoji)
 
     # Datos para gráficas
     hours = df['hour_label'].tolist()
@@ -48,6 +62,8 @@ def dashboard():
     # Tabla redondeando temp_mean a 2 decimales
     df['temp_mean'] = df['temp_mean'].round(2)
 
+
+
     # Datos para sección próximas horas (predicción)
     forecast_df = df[df['is_forecast']]
 
@@ -56,7 +72,7 @@ def dashboard():
         hours=hours,
         temps=temps,
         table=df.to_dict(orient="records"),
-        forecast=forecast_df.to_dict(orient="records"),
+        forecast=forecast_df[['hour_label', 'temperature_2m', 'icon']].to_dict(orient="records"),
         current_temp=current_temp,
         temp_min=temp_min,
         temp_max=temp_max,

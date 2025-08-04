@@ -6,6 +6,17 @@ body {
     background: linear-gradient(135deg, #f0f2f5, #e4e6eb);
 }
 
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+
 /* Tarjetas de métricas (fila superior) */
 .metric-card {
     background: linear-gradient(
@@ -82,3 +93,43 @@ body {
     color: #f9a825; /* Amarillo para el sol */
 }
 
+.custom-forecast-card {
+  background: linear-gradient(135deg, #f0f7ff, #eaf2fb);
+  border-radius: 1rem;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.forecast-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+/* Scrollbar para Chrome */
+.forecast-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+.forecast-scroll::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 8px;
+}
+
+.forecast-item {
+  min-width: 120px;
+  margin-right: 1rem;
+}
+
+.forecast-hour {
+  font-size: 1.6rem;
+  color: #222;
+}
+
+.forecast-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.forecast-temp {
+  font-size: 1.3rem;
+  color: #333;
+}

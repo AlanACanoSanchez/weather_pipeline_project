@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify
 import pandas as pd
 from pathlib import Path
 import datetime as dt
+import locale
 
 app = Flask(__name__)
 
@@ -39,6 +40,12 @@ def format_hour(hour: int) -> str:
 
 @app.route("/")
 def dashboard():
+    
+    # Asegúrate de que esté antes de llamar a strftime
+    locale.setlocale(locale.LC_TIME, "es_MX.UTF-8")  # 🇲🇽 Español (México)
+
+    today = dt.datetime.now().strftime("%d de %B de %Y")
+
     df = load_data().sort_values(by="hour")
 
     # Formatear horas
@@ -77,6 +84,7 @@ def dashboard():
         temp_min=temp_min,
         temp_max=temp_max,
         temp_mean=temp_mean,
+        today=today, 
     )
 if __name__ == "__main__":
     print("Servidor Flask corriendo en http://127.0.0.1:5000")

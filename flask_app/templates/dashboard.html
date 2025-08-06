@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container-fluid bg-light min-vh-100 py-5">
+<div class="container-fluid bg-light min-vh-100 py-3">
   <div class="container" style="max-width: 1800px;">
+
+      <!-- 👇 Aquí insertas la fecha -->
+    <div class="text-center mt-2 mb-3">
+      <h5 class="fw-semibold" style="font-size: 1.6rem; font-family: 'Segoe UI', sans-serif;">
+        {{ today }}
+      </h5>
+    </div>
+
 
     <!-- Tarjetas principales -->
     <div class="row g-4 mb-4">

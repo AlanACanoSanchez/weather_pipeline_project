@@ -1,26 +1,28 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template
 import pandas as pd
 from pathlib import Path
 import datetime as dt
+import pytz
 import locale
 
 app = Flask(__name__)
 
 PROCESSED_PATH = Path(__file__).parent.parent / "data_lake" / "processed"
 
+# 🌤️ Asignar icono según temperatura
 def infer_weather_emoji(temp_celsius: float) -> str:
     if temp_celsius <= 10:
-        return "☁️"  # frío/nublado
+        return "☁️"
     elif 11 <= temp_celsius <= 16:
-        return "🌤️"  # parcialmente nublado
+        return "🌤️"
     elif 17 <= temp_celsius <= 23:
-        return "☀️"  # soleado
+        return "☀️"
     elif 24 <= temp_celsius <= 29:
-        return "🌞"  # calor
+        return "🌞"
     else:
-        return "🔥"  # calor extremo
+        return "🔥"
 
-
+# 📦 Cargar último archivo parquet
 def load_data():
     parquet_files = sorted(PROCESSED_PATH.glob("weather_*.parquet"))
     if not parquet_files:
@@ -30,62 +32,66 @@ def load_data():
     df = pd.read_parquet(latest_file)
     return df
 
+# 🕒 Formato hora
 def format_hour(hour: int) -> str:
-    # Convierte 0-23 a formato 12 AM / 1 PM
     suffix = "AM" if hour < 12 else "PM"
-    h = hour % 12
-    if h == 0:
-        h = 12
+    h = hour % 12 or 12
     return f"{h} {suffix}"
 
 @app.route("/")
 def dashboard():
-    
-    # Asegúrate de que esté antes de llamar a strftime
-    locale.setlocale(locale.LC_TIME, "es_MX.UTF-8")  # 🇲🇽 Español (México)
+    try:
+        # 🌎 Establecer zona horaria de CDMX
+        cdmx_tz = pytz.timezone("America/Mexico_City")
+        now_cdmx = dt.datetime.now(cdmx_tz)
+        current_hour = now_cdmx.hour
 
-    today = dt.datetime.now().strftime("%d de %B de %Y")
+        # 🗓️ Establecer locale español (puede fallar en Windows)
+        try:
+            locale.setlocale(locale.LC_TIME, "es_MX.UTF-8")
+        except:
+            locale.setlocale(locale.LC_TIME, "es_ES.UTF-8")
 
-    df = load_data().sort_values(by="hour")
+        today = now_cdmx.strftime("%d de %B de %Y").capitalize()
 
-    # Formatear horas
-    df['hour_label'] = df['hour'].apply(format_hour)
-    df['icon'] = df['temperature_2m'].apply(infer_weather_emoji)
+        # 📊 Cargar datos
+        df = load_data().sort_values(by="hour")
+        df['hour_label'] = df['hour'].apply(format_hour)
+        df['icon'] = df['temperature_2m'].apply(infer_weather_emoji)
+        df['is_forecast'] = df['hour'] >= current_hour
+        df['temp_mean'] = df['temp_mean'].round(2)
 
-    # Datos para gráficas
-    hours = df['hour_label'].tolist()
-    temps = df['temperature_2m'].tolist()
+        hours = df['hour_label'].tolist()
+        temps = df['temperature_2m'].tolist()
 
-    # Dividir reales vs predicciones
-    current_hour = dt.datetime.now().hour
-    df['is_forecast'] = df['hour'] >= current_hour
+        forecast_df = df[df['is_forecast']]
 
-    # Métricas principales
-    current_temp = temps[-1]
-    temp_min = round(df['temp_min'].min(), 1)
-    temp_max = round(df['temp_max'].max(), 1)
-    temp_mean = round(df['temp_mean'].mean(), 2)
+        current_temp_row = df[df['hour'] == current_hour]
 
-    # Tabla redondeando temp_mean a 2 decimales
-    df['temp_mean'] = df['temp_mean'].round(2)
+        if not current_temp_row.empty:
+            current_temp = round(current_temp_row['temperature_2m'].iloc[0], 1)
+        else:
+            current_temp = "N/A"  # fallback si no se encuentra
+        temp_min = round(df['temp_min'].min(), 1)
+        temp_max = round(df['temp_max'].max(), 1)
+        temp_mean = round(df['temp_mean'].mean(), 2)
 
+        return render_template(
+            "dashboard.html",
+            hours=hours,
+            temps=temps,
+            table=df.to_dict(orient="records"),
+            forecast=forecast_df[['hour_label', 'temperature_2m', 'icon']].to_dict(orient="records"),
+            current_temp=current_temp,
+            temp_min=temp_min,
+            temp_max=temp_max,
+            temp_mean=temp_mean,
+            today=today
+        )
 
+    except FileNotFoundError:
+        return render_template("error.html")  # archivo bonito con mensaje personalizado
 
-    # Datos para sección próximas horas (predicción)
-    forecast_df = df[df['is_forecast']]
-
-    return render_template(
-        "dashboard.html",
-        hours=hours,
-        temps=temps,
-        table=df.to_dict(orient="records"),
-        forecast=forecast_df[['hour_label', 'temperature_2m', 'icon']].to_dict(orient="records"),
-        current_temp=current_temp,
-        temp_min=temp_min,
-        temp_max=temp_max,
-        temp_mean=temp_mean,
-        today=today, 
-    )
 if __name__ == "__main__":
     print("Servidor Flask corriendo en http://127.0.0.1:5000")
     app.run(host="0.0.0.0", port=5000, debug=True)

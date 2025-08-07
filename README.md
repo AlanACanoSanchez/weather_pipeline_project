@@ -30,6 +30,7 @@ Este pipeline de datos meteorológicos está diseñado para:
 
 ## 🗂️ Estructura del proyecto
 
+ `````
 weather_pipeline_project/
 │
 ├── dags/ # DAGs de Airflow (extract + process)
@@ -47,7 +48,8 @@ weather_pipeline_project/
 ├── docker-compose.yml # Orquestación con Docker Compose
 ├── requirements.txt # Dependencias del proyecto
 └── README.md
-
+ `````
+ 
 ---
 
 ## 📈 Dashboard final
